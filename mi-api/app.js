@@ -31,7 +31,11 @@ app.use('/project', projectRouter);
 app.use('/comments', commentsRouter);
 app.use('/contributions', contributionsRouter);
 
-const port =  4000;
+app.get('/', (req, res) => {
+    res.send('Avanti api');
+});
+
+const port =  process.env.PORT || 3000;
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
