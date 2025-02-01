@@ -6,6 +6,8 @@ import logger from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 
+import setupSwagger from './config/swagger.js';
+
 
 dotenv.config();
 
@@ -35,7 +37,9 @@ app.get('/', (req, res) => {
     res.send('Avanti api');
 });
 
-const port =  process.env.PORT || 3000;
+const port =   4000;
+
+setupSwagger(app);
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
