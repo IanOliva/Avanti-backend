@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
-
+import cors from 'cors';
 
 
 
@@ -21,6 +21,8 @@ import contributionsRouter from './routes/contributionRoutes.js';
 
 
 const app = express();
+
+app.use(cors());
 
 app.use(logger('dev'));
 app.use(express.json());
