@@ -1,5 +1,7 @@
 import  Project  from "../models/Project.js";
 import mongoose from "mongoose";
+import getDataUri from "../utils/datauri.js";
+import cloudinary from "../utils/cloudinary.js";
 
 export const getAllProjects = async (req, res) => {
   try {
@@ -56,10 +58,12 @@ export const getProjectById = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const { title, description, category } = req.body;
+    console.log(req.body);
     const userId = req.user?.id;
-    const projectImg = "ejemplodeimg";
+    const projectImg = req.file;
 
-    if (!title || !description || !category ) {
+    // Validar que todos los campos sean requeridos
+    if (!title || !description || !category || !projectImg) {
       return res.status(400).json({
         message: "Todos los campos son obligatorios",
         success: false,
@@ -73,25 +77,29 @@ export const createProject = async (req, res) => {
       });
     }
 
-    // let cloudResponse;
-    // if (projectImg) {
-    //   const fileUri = getDataUri(projectImg);
-    //   cloudResponse = await cloudinary.uploader.upload(fileUri);
+    // Subir imagen a Cloudinary
+    let cloudResponse;
+    if (projectImg) {
+      cloudResponse = await cloudinary.uploader.upload(projectImg.path, {
+        folder: "projects",
+      });
 
-    //   // Verificar si Cloudinary respondió correctamente
-    //   if (!cloudResponse) {
-    //     return res
-    //       .status(500)
-    //       .json({ message: "Error al subir la imagen", success: false });
-    //   }
-    // }
+      // Verificar si Cloudinary respondió correctamente
+      if (!cloudResponse.secure_url) {
+        return res.status(500).json({
+          message: "Error al subir la imagen",
+          success: false,
+        });
+      }
+    }
 
+    // Crear el proyecto con la URL de Cloudinary
     const newProject = await Project.create({
       title,
       description,
       category,
-      projectImg: projectImg ||null,// Si no hay imagen, puede ser null
-      owner: userId, 
+      projectImg: cloudResponse.secure_url || null, // Guardar la URL en la base de datos
+      owner: userId,
     });
 
     return res.status(201).json({

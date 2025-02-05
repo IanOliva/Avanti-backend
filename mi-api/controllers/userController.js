@@ -172,43 +172,58 @@ export const updateProfile = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    
+    // Verificar que el ID sea válido en MongoDB
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ 
-        message: "ID de usuario inválido", 
-        success: false 
+      return res.status(400).json({
+        message: "ID de usuario inválido",
+        success: false,
       });
     }
 
-    const profilePicture = req.file;
-    let cloudResponse;
-
-    
-    if (profilePicture) {
-      const fileUri = getDataUri(profilePicture);
-      cloudResponse = await cloudinary.uploader.upload(fileUri);
-    }
-
+    // Buscar usuario
     const user = await User.findById(userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "No existe un usuario con ese ID", success: false });
+      return res.status(404).json({
+        message: "No existe un usuario con ese ID",
+        success: false,
+      });
     }
 
-    
-    if (profilePicture) user.profilePicture = cloudResponse.secure_url;
+    let profileImageUrl = user.profilePicture; // Mantiene la imagen actual si no se cambia
 
-    await user.save();
+    // Si hay una nueva imagen, subirla a Cloudinary
+    if (req.file) {
+      const cloudResponse = await cloudinary.uploader.upload(req.file.path, {
+        folder: "profile_pictures",
+      });
 
-    return res
-      .status(200)
-      .json({ user, message: "Perfil actualizado", success: true });
+      if (!cloudResponse.secure_url) {
+        return res.status(500).json({
+          message: "Error al subir la imagen a Cloudinary",
+          success: false,
+        });
+      }
+
+      profileImageUrl = cloudResponse.secure_url; // Guardar la nueva URL
+    }
+
+    // Actualizar el usuario
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: profileImageUrl },
+      { new: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      user: updatedUser,
+      message: "Perfil actualizado con éxito",
+      success: true,
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ 
-      message: "Error al actualizar el perfil", 
-      success: false 
+    console.error("Error al actualizar el perfil:", error);
+    return res.status(500).json({
+      message: "Error del servidor",
+      success: false,
     });
   }
 };
