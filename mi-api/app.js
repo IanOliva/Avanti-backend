@@ -6,6 +6,7 @@ import logger from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
 
 
 
@@ -35,8 +36,14 @@ app.use('/project', projectRouter);
 app.use('/comments', commentsRouter);
 app.use('/contributions', contributionsRouter);
 
+app.use(express.static('public'));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 app.get('/', (req, res) => {
-    res.send('Avanti api');
+    res.sendFile(path.join(__dirname, 'public', 'Avanti.jpg'));
 });
 
 const port =   4000;
