@@ -4,6 +4,8 @@ import {
     getContributionByProjectController
 } from '../controllers/contributionController.js';
 
+import { authenticateUser } from "../middlewares/auth.js";
+
 const contributionsRouter = express.Router();
 
 /*
@@ -18,7 +20,7 @@ const contributionsRouter = express.Router();
 }
 *
 */
-contributionsRouter.post('/', createContributionController);
+contributionsRouter.post('/', authenticateUser, createContributionController);
 
 /*
 *

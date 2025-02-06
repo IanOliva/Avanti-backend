@@ -21,11 +21,19 @@ import {
 export const createContributionController = async(req, res) => {
     try {
         const {
-            donator,
             project,
             paymentMethod,
             paymentAmount
         } = req.body;
+
+        const donator = req.user?.id;
+
+        if (!donator) {
+            return res.status(401).json({
+              message: "No estás autenticado",
+              success: false,
+            });
+          }
 
         const newContribution = await createContribution({
             donator,
